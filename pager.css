@@ -1,0 +1,45 @@
+/* Whole pager option table */
+.pager.container {
+    display: inline-block;
+    vertical-align: middle;
+    font-size: 12pt;
+}
+table.pager td {
+    vertical-align: middle;
+}
+/* Associated pager image */
+img.pager {
+    display: inline-block;
+    vertical-align: middle;
+}
+
+/* Option group labels */
+.pager.label {
+    text-align: right;
+    font-weight: bold;
+}
+
+/* Option choices */
+td.pager.options {
+    max-width: 300px;
+    line-height: 20pt;
+}
+
+/* Generic styles for all options */
+a.pager {
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+/* Inactive options */
+a.pager.inactive {
+    border: 1px solid #f0d0d0;
+}
+/* Styling for the active options */
+a.pager.active {
+    background-color: #c0c0c0;
+}
+/* Remove padding from a spinner */
+form.pager {
+    margin: 0px;
+    padding: 0px;
+}
