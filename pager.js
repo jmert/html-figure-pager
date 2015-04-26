@@ -642,7 +642,7 @@ Pager.prototype.link = function(img_sel, options, cb_gen) {
 Pager.prototype.setparams = function(params) {
     var keys = Object.keys(params);
     for (var ii=0; ii<keys.length; ++ii)
-        this.setopt(keys[ii], params[keys[ii]]);
+        this.setopt(keys[ii], params[keys[ii]], ii==keys.length-1);
 }
 
 /**
@@ -673,8 +673,17 @@ Pager.prototype.setparams = function(params) {
  * 
  *                 2. For typical enumerated string options, the value should
  *                    be a valid string.
+ *
+ *     update    Defaults to true where the figure images are updated. If
+ *               false, then the stored parameters are update, but pager image
+ *               sources are not updated. (This is most useful for setparams()
+ *               which knows when the last parameter has been set.)
  */
-Pager.prototype.setopt = function(option, value) {
+Pager.prototype.setopt = function(option, value, update) {
+
+    // Default to true if the value was not given
+    update = (typeof update !== 'undefined' ? update : true);
+
     // DataList is updated using it's own API
     if (this.params[option] instanceof Pager.DataList)
     {
@@ -726,20 +735,23 @@ Pager.prototype.setopt = function(option, value) {
         }
     }
 
-    // Update all registered images last since this causes the biggest delay
-    // as images are loaded across the network. Since this is a synchronous
-    // process, make sure that all other UI changes are made first.
-    var images = Object.keys(this.registry);
-    for (var ii=0; ii<images.length; ++ii)
+    if (update)
     {
-        var imgsel = images[ii];
+        // Update all registered images last since this causes the biggest delay
+        // as images are loaded across the network. Since this is a synchronous
+        // process, make sure that all other UI changes are made first.
+        var images = Object.keys(this.registry);
+        for (var ii=0; ii<images.length; ++ii)
+        {
+            var imgsel = images[ii];
 
-        // Get the image source name from the registered callback
-        var fn     = this.registry[imgsel];
-        var imgsrc = fn(this.params);
-        // Also get a handle to the image
-        var img    = document.querySelector(imgsel);
-        img.src    = imgsrc;
+            // Get the image source name from the registered callback
+            var fn     = this.registry[imgsel];
+            var imgsrc = fn(this.params);
+            // Also get a handle to the image
+            var img    = document.querySelector(imgsel);
+            img.src    = imgsrc;
+        }
     }
 }
 
