@@ -438,8 +438,12 @@ var Pager = function(namespace) {
  *                The possible options for the group must be given in one of
  *                the following recognized input forms:
  *
- *                  => A string array.
- *                  => A Pager.Data object.  (NOT YET IMPLEMENTED)
+ *                  => An associative string array in the same format as the
+ *                     options array, with the added special case that a
+ *                     empty string is translated to a manual line-break
+ *                     <br> for formatting reasons.
+ *
+ *                  => A Pager.DataList object.
  *
  *     cb_gen     A callback function which takes in as an input an
  *                associative array of the current option selections. It
@@ -600,17 +604,27 @@ Pager.prototype.link = function(img_sel, options, cb_gen) {
                 if (jj == 0)
                     this.params[mkey] = mval;
 
-                var a = document.createElement('a');
-                a.href = "javascript:void(0);";
-                a.addEventListener('click', this.setopt.bind(this, mkey, mval));
-                a.appendChild(document.createTextNode(hval));
-                a.classList.add('pager');
+                // For the special case that the key and value are empty,
+                // use this as a manual line-breaking mechanism.
+                if (hval == '' && mval == '')
+                {
+                    var a = document.createElement('br');
+                }
+                // Otherwise construct a useful link
+                else
+                {
+                    var a = document.createElement('a');
+                    a.href = "javascript:void(0);";
+                    a.addEventListener('click', this.setopt.bind(this, mkey, mval));
+                    a.appendChild(document.createTextNode(hval));
+                    a.classList.add('pager');
 
-                // Make finding all relevant links easy
-                a.setAttribute('namespace', this.namespace);
-                a.setAttribute('paramkey', mkey);
-                a.setAttribute('paramval', mval);
+                    // Make finding all relevant links easy
+                    a.setAttribute('namespace', this.namespace);
+                    a.setAttribute('paramkey', mkey);
+                    a.setAttribute('paramval', mval);
 
+                }
                 // Insert the link with a space otherwise everything squishes
                 // together if no extra CSS styles are included.
                 c2.appendChild(a);
