@@ -524,13 +524,16 @@ Pager.prototype.link = function(img_sel, options, cb_gen) {
         var mkey = key[1];
 
         // New row to identify the option group
-        var r = _.insertRow(-1);
-        var c1 = r.insertCell();
+        var r = document.createElement('tr');
+        var c1 = document.createElement('td');
         c1.classList.add('pager','label');
         c1.appendChild(document.createTextNode(hkey));
+        r.appendChild(c1);
+        _.appendChild(r);
         
-        var c2 = r.insertCell();
+        var c2 = document.createElement('td');
         c2.classList.add('pager','options');
+        r.appendChild(c2);
 
         // Building the remainder of the UI depends on what the input type
         // of the argument was.
@@ -548,7 +551,7 @@ Pager.prototype.link = function(img_sel, options, cb_gen) {
             form.addEventListener('submit', function(evt) {
                 evt.preventDefault();
                 return void(0);
-            });
+            }, false);
             
             // Identify the selectors by the form
             form.setAttribute('namespace', this.namespace);
@@ -570,17 +573,19 @@ Pager.prototype.link = function(img_sel, options, cb_gen) {
             input.size    = 6;
 
             // Attach the buttons to events which will do the right thing
-            rewind.addEventListener('click', value.rewind.bind(value));
+            rewind.addEventListener('click', value.rewind.bind(value), false);
             rewind.addEventListener('click',
-                this.setopt.bind(this, mkey, undefined));
+                this.setopt.bind(this, mkey, undefined), false);
 
-            advance.addEventListener('click', value.advance.bind(value));
+            advance.addEventListener('click', value.advance.bind(value),
+                false);
             advance.addEventListener('click',
-                this.setopt.bind(this, mkey, undefined));
+                this.setopt.bind(this, mkey, undefined), false);
 
             // Also let the user input a value and then skip to the
             // corresponding figure.
-            input.addEventListener('change', this.setopt.bind(this, mkey));
+            input.addEventListener('change', this.setopt.bind(this, mkey),
+                false);
 
             // Insert them into the form in order.
             form.appendChild(rewind);
@@ -615,7 +620,8 @@ Pager.prototype.link = function(img_sel, options, cb_gen) {
                 {
                     var a = document.createElement('a');
                     a.href = "javascript:void(0);";
-                    a.addEventListener('click', this.setopt.bind(this, mkey, mval));
+                    a.addEventListener('click', this.setopt.bind(this, mkey,
+                          mval, true), false);
                     a.appendChild(document.createTextNode(hval));
                     a.classList.add('pager');
 
