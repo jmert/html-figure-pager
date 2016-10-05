@@ -22,12 +22,14 @@ img.pager {
 /* Option choices */
 td.pager.options {
     max-width: 300px;
-    line-height: 20pt;
 }
 
 /* Generic styles for all options */
 a.pager {
+    display: inline-block;
+    text-align: center;
     padding: 2px 4px;
+    margin: 2px 0px;
     -webkit-border-radius: 4px;
     -moz-border-radius: 4px;
     border-radius: 4px;

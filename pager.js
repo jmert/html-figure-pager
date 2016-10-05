@@ -10,8 +10,8 @@ modification, are permitted provided that the following conditions are met:
       notice, this list of conditions and the following disclaimer in the
       documentation and/or other materials provided with the distribution.
     * Neither the name of the School of Physics and Astronomy, University of
-      Minnesota nor the names of its contributors may be used to endorse or 
-      promote products derived from this software without specific prior 
+      Minnesota nor the names of its contributors may be used to endorse or
+      promote products derived from this software without specific prior
       written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
@@ -32,7 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * This library provides a simple interface which eases the creation of figure
  * pagers used in my research summaries.
- * 
+ *
  * USAGE
  * =====
  *
@@ -42,7 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *     panel of pager options is generated alongside the image.
  *
  * MULTIPLE NAMESPACES
- * 
+ *
  * CSS STYLING
  *     The goal of the pager is to be descriptive enough that all elements are
  *     stylable so that the pager can be made to fit in with any page style.
@@ -97,8 +97,8 @@ if (!Function.prototype.bind) {
       throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
     }
 
-    var aArgs = Array.prototype.slice.call(arguments, 1), 
-        fToBind = this, 
+    var aArgs = Array.prototype.slice.call(arguments, 1),
+        fToBind = this,
         fNOP = function () {},
         fBound = function () {
           return fToBind.apply(this instanceof fNOP && oThis
@@ -170,7 +170,7 @@ if (!Object.keys) {
   }
   if (!Element.prototype.addEventListener) {
     var eventListeners=[];
-    
+
     var addEventListener=function(type,listener /*, useCapture (will be ignored) */) {
       var self=this;
       var wrapper=function(e) {
@@ -190,7 +190,7 @@ if (!Object.keys) {
         };
         document.attachEvent("onreadystatechange",wrapper2);
         eventListeners.push({object:this,type:type,listener:listener,wrapper:wrapper2});
-        
+
         if (document.readyState=="complete") {
           var e=new Event();
           e.srcElement=window;
@@ -423,14 +423,14 @@ var Pager = function(namespace) {
  * INPUTS
  *     img_sel    A querySelector-style selector string which is used to
  *                select the figure which is to be updated.
- * 
+ *
  *     options    An associative array which defines all the options and
  *                parameters that the pager will make use of. The option group
  *                is defined by a string in one of the two following forms:
  *
  *                  1. If no pipe symbol is found, then the string is used
  *                     as-is for display and internal use.
- * 
+ *
  *                  2. If a pipe-symbol is found, then the first half is
  *                     the human-friendly string, while the second half is
  *                     the string used progmatically.
@@ -530,7 +530,7 @@ Pager.prototype.link = function(img_sel, options, cb_gen) {
         c1.appendChild(document.createTextNode(hkey));
         r.appendChild(c1);
         _.appendChild(r);
-        
+
         var c2 = document.createElement('td');
         c2.classList.add('pager','options');
         r.appendChild(c2);
@@ -552,7 +552,7 @@ Pager.prototype.link = function(img_sel, options, cb_gen) {
                 evt.preventDefault();
                 return void(0);
             }, false);
-            
+
             // Identify the selectors by the form
             form.setAttribute('namespace', this.namespace);
             form.setAttribute('paramkey', mkey);
@@ -614,6 +614,10 @@ Pager.prototype.link = function(img_sel, options, cb_gen) {
                 if (hval == '' && mval == '')
                 {
                     var a = document.createElement('br');
+                    // Also annotate to know that this is an explicit line
+                    // break that shouldn't be removed in a gridalign()
+                    // reflow.
+                    a.classList.add('pager_explicit');
                 }
                 // Otherwise construct a useful link
                 else
@@ -650,11 +654,11 @@ Pager.prototype.link = function(img_sel, options, cb_gen) {
 
 /**
  * Pager.setparams(params)
- * 
+ *
  * Sets all parameters to a value by reading the key-val pairs from params.
  * This is useful for setting the default parameters when the page is
  * initially loaded.
- * 
+ *
  * INPUTS
  *     params    An associative array or object of key-value pairs which
  *               will determine the recognized parameter values.
@@ -667,10 +671,10 @@ Pager.prototype.setparams = function(params) {
 
 /**
  * Pager.setopt(option, value)
- * 
+ *
  * Sets the parameter 'option' to the value 'value'. Setting an option
  * causes all registered pages to be updated.
- * 
+ *
  * INPUTS
  *     option    The name of a particular option and should be a string
  *               since it is also used as the name of the key in an
@@ -680,7 +684,7 @@ Pager.prototype.setparams = function(params) {
  *
  *                 1. If the option corresponds to a DataList, then the value
  *                    is taken from a variety of sources:
- * 
+ *
  *                      a. If value is a string, then a new elements is
  *                         selected by invoking skipto(fromString()).
  *
@@ -690,7 +694,7 @@ Pager.prototype.setparams = function(params) {
  *
  *                      c. If value is undefined, then the current value stored
  *                         within the DataList is used.
- * 
+ *
  *                 2. For typical enumerated string options, the value should
  *                    be a valid string.
  *
@@ -776,10 +780,122 @@ Pager.prototype.setopt = function(option, value, update) {
 }
 
 /**
+ * Modifies button sizes and inserts line breaks so that the option link
+ * buttons are aligned to a grid of a given width.
+ *
+ * Note that any explicit line breaks specified in the option list during
+ * setup are preserved.
+ *
+ * INPUTS
+ *     img_sel    A querySelector-style selector string which is used to
+ *                select the figure which is to be updated.
+ *
+ *     nwide      An integer specifying how many columns across should be
+ *                constructed.
+ */
+Pager.prototype.gridalign = function(img_sel, nwide) {
+    // Verify identity as in Pager.link()
+    var img = document.querySelector(img_sel);
+    if (img === null)
+    {
+        console.warn("[pager.gridalign]: '" + img_sel
+            + "' matches no element.");
+        return;
+    }
+
+    // Everything for this selector is registered by the table named by
+    // img.id+'_options'.
+    var tblname = img.id + '_options';
+
+    // Remove implicit line breaks created during any prior call to
+    // gridalign(). Note that we will explicitly ignore deleting the
+    // explict line breaks setup by the user.
+    var breaks = document.querySelectorAll('#'+tblname + ' br');
+
+    for (var ii=0; ii<breaks.length; ++ii)
+    {
+        if (breaks[ii].classList.contains("pager_explicit"))
+        {
+            continue;
+        }
+
+        // If not an explicit break, remove it.
+        var pp = breaks[ii].parentNode.removeChild(breaks[ii]);
+    }
+
+    // Make sure the container td element for the links does not have a
+    // maximum width which will interfere.
+    var opttd = document.querySelectorAll('#'+tblname + ' td.pager.options');
+    for (var ii=0; ii<opttd.length; ++ii)
+    {
+        opttd[ii].setAttribute("style", "max-width:none;");
+    }
+
+    // Now enumerate all link elements:
+    var links = document.querySelectorAll('#'+tblname + ' a');
+    // First, reset styles to auto to get the natural width:
+    for (var ii=0; ii<links.length; ++ii)
+    {
+        links[ii].style.width = 'auto';
+    }
+    // Now we can get the width of elements as rendered.
+    maxwd = 0;
+    for (var ii=0; ii<links.length; ++ii)
+    {
+        var rect = links[ii].getBoundingClientRect();
+        // Unfortunately, rect.width isn't always available...
+        var elwd = rect.right - rect.left;
+        if (maxwd < elwd) {
+            maxwd = elwd;
+            console.warn('[pager.gridalign]: maxwidth = ' + maxwd);
+        }
+    }
+
+    // Now setup the options to match a grid. Do this td-by-td.
+    for (var ii=0; ii<opttd.length; ++ii)
+    {
+        var els = opttd[ii].childNodes;
+        var inrow = 0;
+        for (var jj=0; jj<els.length; ++jj)
+        {
+            if (els[jj].nodeName == "BR")
+            {
+                // We've already deleted implicit breaks, so respect this and
+                // reset the counter.
+                inrow = 0;
+                continue;
+            }
+            else if (els[jj].nodeName == "A")
+            {
+                // Increment counter
+                inrow++;
+                // Also now specify the size of the element, computed earlier
+                els[jj].style.width = maxwd + 'px';
+            }
+            else
+            {
+                // Skip over unrecognized nodes. This should primarily just
+                // be text nodes used to space the elements
+                continue;
+            }
+
+            // Insert a break if we need to
+            if (inrow >= nwide)
+            {
+                console.warn('[pager.gridalign]: inserting break');
+                var br = document.createElement('br');
+                opttd[ii].insertBefore(br, els[jj+1]);
+                inrow = 0;
+            }
+        }
+    }
+}
+
+/**
  * A Pager.DataList is a valid value type for Pager.link which creates an input
  * box with rewind and advance buttons on either side. The selection is then
  * restricted to an element which exists within the list.
- * 
+ *
  * INPUTS
  *     list    The array which is to be stored for this option type. Note that
  *             the list is expected to be provided in sorted order.
@@ -792,7 +908,7 @@ Pager.DataList = function(list) {
 /**
  * Converts a chosen list element into the string which is to be displayed in
  * the input box.
- * 
+ *
  * This may need to be overridden for a particular instance in order to better
  * format the output string.
  */
@@ -803,7 +919,7 @@ Pager.DataList.prototype.toString = function() {
 /**
  * Converts from a string input to the correct type for comparison operations
  * in DataList.skipto(). Default implementation converts to a string.
- * 
+ *
  * Often will be overridden to coerse types, for example when a number is
  * selected in the pager and must be compared to a list of integers.
  */
@@ -814,7 +930,7 @@ Pager.DataList.prototype.fromString = function(valstr) {
 /**
  * Increments the internal pointer into the array, keeping in mind the bounds
  * of the list.
- * 
+ *
  * Typically should not be overridden.
  */
 Pager.DataList.prototype.advance = function() {
@@ -825,7 +941,7 @@ Pager.DataList.prototype.advance = function() {
 /**
  * Decrements the internal pointer into the array, keeping in mind the bounds
  * of the list.
- * 
+ *
  * Typically should not be overridden.
  */
 Pager.DataList.prototype.rewind = function() {
@@ -836,7 +952,7 @@ Pager.DataList.prototype.rewind = function() {
 /**
  * Select the given element in the list if it exists, otherwise choose the
  * nearest valid option.
- * 
+ *
  * Typically should not be overridden.
  */
 Pager.DataList.prototype.skipto = function(value) {
