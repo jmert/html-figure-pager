@@ -8,7 +8,8 @@ table.pager td {
     vertical-align: middle;
 }
 /* Associated pager image */
-img.pager {
+img.pager,
+video.pager {
     display: inline-block;
     vertical-align: middle;
 }
