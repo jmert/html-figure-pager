@@ -23,6 +23,7 @@ video.pager {
 /* Option choices */
 td.pager.options {
     max-width: 300px;
+    text-align: left;
 }
 
 /* Generic styles for all options */
