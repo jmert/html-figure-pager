@@ -476,6 +476,7 @@ Pager.prototype.link = function(img_sel, options, cb_gen) {
     {
         console.warn("[pager.link]: Invalid function. Not registering '"
             + img_sel + '".');
+        return;
     }
 
     // Claim the image as a pager image
@@ -889,6 +890,42 @@ Pager.prototype.gridalign = function(img_sel, nwide) {
             }
         }
     }
+}
+
+/**
+ * Wraps the target image in a wrapper node, useful for applying extra
+ * styling.
+ *
+ * The function should be called *after* Pager.link() in order for the pager
+ * option table to not be wrapped as well.
+ *
+ * INPUTS
+ *     img_sel    A querySelector-style selector string which is used to
+ *                select the figure which is to be updated.
+ *
+ *     eltype     The element type of the wrapper to generate.
+ */
+Pager.prototype.wrap = function(img_sel, eltype) {
+    var img = document.querySelector(img_sel);
+    if (img === null) {
+        console.warn("[pager.wrap]: '" + img_sel + "' matches no element.");
+        return;
+    }
+
+    // Generate the new wrapper node
+    var wrap = document.createElement(eltype);
+    wrap.classList.add('pager', 'wrapper');
+    wrap.id = img.id + '_wrapper';
+
+    // Insert the wrapper node relative to the next sibling of the image.
+    // Doing insertion with respect to the image itself causes problems once
+    // we remove the image from the DOM.
+    var parent = img.parentNode;
+    parent.insertBefore(wrap, img.nextElementSibling);
+
+    // Then remove img from the parent and re-parent it as a child of wrap.
+    parent.removeChild(img);
+    wrap.appendChild(img);
 }
 
 /**
