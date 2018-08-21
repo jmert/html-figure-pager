@@ -49,3 +49,11 @@ form.pager {
     margin: 0px;
     padding: 0px;
 }
+
+tr.pager.permalink {
+    border-bottom: 1px solid #ddd;
+}
+a.pager.permalink {
+    color: #ddd;
+    font-variant: small-caps;
+}

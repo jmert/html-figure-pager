@@ -409,6 +409,38 @@ var Pager = function(namespace) {
     this.counter = 0;
     this.params = {};
     this.registry = {};
+
+    var reset = function() {
+        var hash  = document.location.hash;
+        if (Object.keys(this.registry).indexOf(hash) == -1) {
+            return;
+        }
+        this.deserialize(document.location.search.substring(1));
+    }
+    document.addEventListener('DOMContentLoaded', reset.bind(this), false);
+}
+
+Pager.prototype.serialize = function() {
+    var query = [];
+    var params = this.params;
+    for (var p in params) {
+        if (!params.hasOwnProperty(p))
+            continue;
+        query.push(encodeURIComponent(p) + "=" + encodeURIComponent(params[p]));
+    }
+    return query.join("&");
+}
+
+Pager.prototype.deserialize = function(query) {
+    /* Modeled on https://stackoverflow.com/a/2880929 */
+    var decode = function (s) { return decodeURIComponent(s.replace(/\+/g, " ")); };
+    var search = /([^&=]+)=?([^&]*)/g;
+    var params = {};
+    while (match = search.exec(query)) {
+        params[decode(match[1])] = decode(match[2]);
+    }
+    this.setparams(params);
+    return params;
 }
 
 /**
@@ -500,6 +532,27 @@ Pager.prototype.link = function(img_sel, options, cb_gen) {
         _.id = this.namespace + this.counter;
     }
     this.counter++;
+
+    // Generate permalink cell and link:
+    var permalink = document.createElement('a');
+    permalink.href = "#";
+    permalink.id = img.id + '_permalink';
+    permalink.appendChild(document.createTextNode('permalink'));
+    permalink.addEventListener('click', function(evt) {
+            evt.preventDefault();
+            return void(0);
+        }, false);
+    permalink.classList.add('pager', 'permalink');
+
+    var permacell = document.createElement('td');
+    permacell.setAttribute('colspan', 2);
+    permacell.classList.add('pager', 'permalink');
+    permacell.appendChild(permalink);
+
+    var permarow = document.createElement('tr');
+    permarow.classList.add('pager', 'permalink');
+    permarow.appendChild(permacell);
+    _.appendChild(permarow);
 
     // Split up an element around the '|' if necessary, otherwise duplicate
     // into two values.
@@ -769,6 +822,7 @@ Pager.prototype.setopt = function(option, value, update) {
         for (var ii=0; ii<images.length; ++ii)
         {
             var imgsel = images[ii];
+            var linksel = images[ii] + '_permalink';
 
             // Get the image source name from the registered callback
             var fn     = this.registry[imgsel];
@@ -776,6 +830,9 @@ Pager.prototype.setopt = function(option, value, update) {
             // Also get a handle to the image
             var img    = document.querySelector(imgsel);
             img.src    = imgsrc;
+            // Then update the permalink
+            var link   = document.querySelector(linksel);
+            link.href  = '?' + this.serialize() + imgsel;
         }
     }
 }
@@ -799,8 +856,8 @@ Pager.prototype.gridalign = function(img_sel, nwide) {
     var img = document.querySelector(img_sel);
     if (img === null)
     {
-        console.warn("[pager.gridalign]: '" + img_sel
-            + "' matches no element.");
+        //console.debug("[pager.gridalign]: '" + img_sel
+        //    + "' matches no element.");
         return;
     }
 
@@ -848,7 +905,7 @@ Pager.prototype.gridalign = function(img_sel, nwide) {
         var elwd = rect.right - rect.left;
         if (maxwd < elwd) {
             maxwd = elwd;
-            console.warn('[pager.gridalign]: maxwidth = ' + maxwd);
+            //console.debug('[pager.gridalign]: maxwidth = ' + maxwd);
         }
     }
 
@@ -883,7 +940,7 @@ Pager.prototype.gridalign = function(img_sel, nwide) {
             // Insert a break if we need to
             if (inrow >= nwide)
             {
-                console.warn('[pager.gridalign]: inserting break');
+                //console.debug('[pager.gridalign]: inserting break');
                 var br = document.createElement('br');
                 opttd[ii].insertBefore(br, els[jj+1]);
                 inrow = 0;
