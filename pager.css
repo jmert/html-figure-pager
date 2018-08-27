@@ -50,7 +50,7 @@ form.pager {
     padding: 0px;
 }
 
-tr.pager.permalink {
+td.pager.permalink {
     border-bottom: 1px solid #ddd;
 }
 a.pager.permalink {
