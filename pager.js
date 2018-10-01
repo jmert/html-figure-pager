@@ -1028,7 +1028,7 @@ Pager.DataList.prototype.fromString = function(valstr) {
  * Typically should not be overridden.
  */
 Pager.DataList.prototype.advance = function() {
-    if (this.idx < this.list.length)
+    if (this.idx < this.list.length - 1)
         this.idx++;
 }
 
