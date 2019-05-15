@@ -910,7 +910,7 @@ Pager.prototype.gridalign = function(img_sel, nwide) {
     var opttd = document.querySelectorAll('#'+tblname + ' td.pager.options');
     for (var ii=0; ii<opttd.length; ++ii)
     {
-        opttd[ii].setAttribute("style", "max-width:none;");
+        opttd[ii].style.maxWidth = 'none';
     }
 
     // Now enumerate all link elements:
