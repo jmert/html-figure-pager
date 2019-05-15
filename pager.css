@@ -44,6 +44,11 @@ a.pager.inactive {
 a.pager.active {
     background-color: #c0c0c0;
 }
+/* Remove borders, styling, etc from padding-only elements */
+a.pager.pad {
+    border: 1px;
+    visibility: hidden;
+}
 /* Remove padding from a spinner */
 form.pager {
     margin: 0px;

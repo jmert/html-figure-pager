@@ -28,7 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 /**
  * File: pager.js
- * Author: Justin Willmert ⓒ 2014
+ * Author: Justin Willmert ⓒ 2014–2019
  *
  * This library provides a simple interface which eases the creation of figure
  * pagers used in my research summaries.
@@ -80,6 +80,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *         a.pager.active {
  *             background-color: #c0c0c0;
  *             border-radius: 4px;
+ *         }
+ *         /* Styling for a padding-only element * /
+ *         a.pager.pad {
+ *             visibility: hidden;
  *         }
  *     </style>
  */
@@ -471,9 +475,17 @@ Pager.prototype.deserialize = function(query) {
  *                the following recognized input forms:
  *
  *                  => An associative string array in the same format as the
- *                     options array, with the added special case that a
- *                     empty string is translated to a manual line-break
- *                     <br> for formatting reasons.
+ *                     options array for standard options. Two special
+ *                     cases exist:
+ *
+ *                       - The empty string '' and empty pair '|' is
+ *                         translated to a manual line-break (<br>), which
+ *                         can be used for alignment/formatting purposes.
+ *
+ *                       - The pipe option string '||' is used to insert an
+ *                         empty, invisible link element which can be used
+ *                         to implement padding in the options for manual
+ *                         mutual alignment.
  *
  *                  => A Pager.DataList object.
  *
@@ -485,7 +497,11 @@ Pager.prototype.deserialize = function(query) {
  * EXAMPLE
  *
  *     opts = { 'Year|yr': ['2013','2014'] };
- *     pager.link('#yearly_plot', opts, function(p){ return p['yr']+'.png'; });
+ *     pager.link('#yearly_plot', opts,
+ *         function(p){
+ *             return p.yr + '.png';
+ *         });
+ *     pager.gridalign('#yearly_plot', 2);
  *
  */
 Pager.prototype.link = function(img_sel, options, cb_gen) {
@@ -672,6 +688,14 @@ Pager.prototype.link = function(img_sel, options, cb_gen) {
                     // break that shouldn't be removed in a gridalign()
                     // reflow.
                     a.classList.add('pager_explicit');
+                }
+                // Special case that generates an empty padding element
+                else if (hval == '' && mval == '|')
+                {
+                    var a = document.createElement('a');
+                    a.classList.add('pager');
+                    a.classList.add('pad');
+                    a.appendChild(document.createTextNode(''));
                 }
                 // Otherwise construct a useful link
                 else
