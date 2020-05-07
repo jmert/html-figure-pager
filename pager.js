@@ -80,6 +80,15 @@ var Pager = function(namespace) {
     document.addEventListener('DOMContentLoaded', reset.bind(this), false);
 }
 
+/**
+ * Pager.serialize()
+ *
+ * Returns a URI-encoded (i.e. GET query compatible) string containing the
+ * selections of all pager options.
+ *
+ * This method is used to construct the permalink which heads each table of
+ * pager options.
+ */
 Pager.prototype.serialize = function() {
     var query = [];
     var params = this.params;
@@ -91,6 +100,15 @@ Pager.prototype.serialize = function() {
     return query.join("&");
 }
 
+/**
+ * Pager.deserialize(query)
+ *
+ * Given the query component of the path, decode the string and set the
+ * pager options to the provided values.
+ *
+ * This method will be automatically called on page load if pager options have
+ * been set.
+ */
 Pager.prototype.deserialize = function(query) {
     /* Modeled on https://stackoverflow.com/a/2880929 */
     var decode = function (s) { return decodeURIComponent(s.replace(/\+/g, " ")); };
