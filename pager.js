@@ -748,7 +748,7 @@ Pager.DataList.prototype.rewind = function() {
  * Typically should not be overridden.
  */
 Pager.DataList.prototype.skipto = function(value) {
-    this.idx = this.binsearch(this.fromString(value));
+    this.idx = this.binsearch(value);
 }
 
 /**
