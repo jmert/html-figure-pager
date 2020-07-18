@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+
+<head>
+    <meta charset="utf-8">
+    <title>Example use of the HTML Figure pager script</title>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <script type="text/javascript" src="pager.js"></script>
+    <link rel="stylesheet" type="text/css" href="pager.css">
+</head>
+
+<body>
+<header>
+    <h1>Example use of the HTML Figure pager script</h1>
+</header>
+
+<hr>
+
+<p>This page demonstrates a few uses of the HTML figure pager by plotting. View the
+source of this page to inspect the implementation.</p>
+
+<hr>
+
+<section><h2>The first few spherical harmonics</h2>
+    <figure>
+        <img alt="Orthographic projectsion of the spherical harmonics"
+            id="first_harmonics" src="#" style="max-width: 450px;" />
+        <figcaption>
+            Orthographic projection of the real part of the spherical harmonics (where the
+            camera view is centered on 30°N, 150°W). The color scale is peak-normalized, so
+            the relative mode-to-mode amplitudes are not comparable.
+            The imaginary part is similar and differs by a relative azimuthal rotation.
+        </figcaption>
+        <script type="text/javascript">
+            /* The `link()` call constructs the figure pager.
+
+            The first argument is a CSS selector (which will typicall be the form
+            of '#' + the ID of an element) for the image to manipulate. The pager options
+            will be dynamically inserted into the DOM as a predecessor sibling of the
+            <img> tag.
+
+            The second argument should is a dictionary of options. The key is is the
+            option name, and the value is an array of possible values. The value strings
+            may also be a pair of display names and option values separated by a pipe
+            character ("|"), in which case the leading half is used only for what is shown
+            on the page while the latter half is the value passed to the callback function
+            for use in constructing the image file name.
+
+                There are two special cases of option values:
+
+                1. The single pipe ("|") option is treated as an explicit line break to
+                   push options to the next line.
+                2. The double pipe ("||") option is treated as an empty padding option
+                   which will have no content or link but can participate in the spacing
+                   of the option grid. (See `gridalign()` call below.)
+
+            The final argument is a callback function which takes only a single parameter
+            `params`. The callback is invoked any time a figure option link is clicked,
+            with the `params` dictionary containing the key-value pairs of the currently
+            selected options. The return value is the filename of the image to be displayed.
+            */
+            pager.link("#first_harmonics",
+                {
+                    "Mode|mode": ["(0,0)|ell0_m0", "|",
+                                  "(1,0)|ell1_m0", "(1,1)|ell1_m1", "|",
+                                  "(2,0)|ell2_m0", "(2,1)|ell2_m1", "(2,2)|ell2_m2", "|",
+                                  "(3,0)|ell3_m0", "(3,1)|ell3_m1", "(3,2)|ell3_m2", "(3,3)|ell3_m3"],
+                    "Color map|cmap": ["cividis", "jet"],
+                },
+                function(params) {
+                    return "harmonics/ylms_" + params.cmap + "_" + params.mode + ".png";
+                });
+            /*
+            On page load, all options implicitly default to the first value choice.
+            It is typical to explicitly set the desired default state by calling the
+            `setparams()` function with a dictionary of the key-value pairs which should
+            be initially shown.
+            */
+            pager.setparams({
+                    "mode": "ell1_m0",
+                    "cmap": "cividis",
+                });
+            /*
+            The call to `gridalign()` is optional, but useful for nicely laying out
+            all the option values with equal lengths (rather than the natural width of
+            the containing text) so that they line up on a grid. The second value gives
+            the implicit number of options in a single "row" of options to retain before
+            inserting a line break. (The calculation is done respecting any explicit
+            line-breaking "|" options and padding "||" options.)
+            */
+            pager.gridalign("#first_harmonics", 4);
+        </script>
+    </figure>
+</section>
+
+<section><h2>A case with a long list of options</h2>
+    <figure>
+        <img alt="Orthographic projectsion of the spherical harmonics"
+            id="list_harmonics" src="#" style="max-width: 450px;" />
+        <figcaption>
+            Orthographic projection of the real part of the spherical harmonics (where the
+            camera view is centered on 30°N, 150°W). The color scale is peak-normalized, so
+            the relative mode-to-mode amplitudes are not comparable.
+            The imaginary part is similar and differs by a relative azimuthal rotation.
+        </figcaption>
+        <script type="text/javascript">
+            /*
+            Helper functions to translate between a 0-index linear number and a pair
+            of (l,m) indices. If you think of the (l,m) options as the filled lower triangle
+            of a matrix where l increases down the column and m across the rows, then the
+            indexing is a row-wise listing of the options from the first column to the
+            diagonal of each row.
+            */
+            function lm2index(l, m) { return Math.floor(l * (l + 1) / 2) + m; }
+            function index2lm(i) {
+                var l = Math.ceil((Math.sqrt(9 + 8*i) - 3) / 2);
+                var m = i - lm2index(l, 0);
+                return {"l": l, "m": m};
+            }
+
+            /* For 0 <= ell <= 50 and 0 <= m <= ell, there are lmax*(lmax+1)/2 + lmax options. */
+            function range(i) { return i > 0 ? range(i - 1).concat(i - 1) : []; }
+            var lmax = 50;
+            var listidx = range(Math.floor(lmax * (lmax + 1) / 2) + lmax + 1);
+
+            /*
+            `modelist` has 1326 elements, so way too long to create an individual button
+            for each option. Instead allow running through the list of all possible modes
+            in a canonical ordering.
+
+            The underlying data structure will just use the linear indexing since jumping
+            to a given index is automatically supported on sorted lists via a binary
+            search.
+            */
+            var modeopt = new Pager.DataList(listidx);
+            /*
+            But for display on the page, we want to override the `toString()` and
+            `fromString(str)` functions which by default are appropriate for simple
+            numbers. For the `toString()` function, turn the index into an (l,m) pair and
+            print a formatted string of the two numbers in a tuple.
+            */
+            modeopt.toString = function() {
+                /* In this case, `this.idx == this.list[this.idx]`; in general, though,
+                you'll probably want to use the list item instead of its index. */
+                var lm = index2lm(this.idx);
+                return "(" + lm.l + "," + lm.m + ")";
+            }
+            /* For the reverse operation, parse the tuple into two integers, and do some
+            very minor validation of the range of values. Return an index which the
+            underlying data structure will use to search the list we provided.
+            */
+            modeopt.fromString = function(str) {
+                var match = /\(\s*(\d+)\s*,\s*(\d+)\s*\)/;
+                var l = parseInt(str.replace(match, "$1"));
+                var m = parseInt(str.replace(match, "$2"));
+                l = (l < 0) ? 0 : l;
+                m = (m > l) ? l : m;
+                return lm2index(l, m);
+            }
+
+            /*
+            The `pager` variable is a global, default instance of the `Pager` class that is
+            created by the pager.js script.
+            Using a single pager object allows many figures to be linked together so that
+            changes options on any one pager will update all figures that share the same
+            set of options. (Note that this implicitly means that options with the same
+            name must have a consistent set of values across all figures to avoid generating
+            invalid image filenames for any given pager.)
+
+            Alternatively, we can explicitly create a new instance of a `Pager` to have
+            the figure act independently from any other figure pagers. The argument is
+            used as a "namespace", which is primarily useful for unambiguously identifying
+            the set of options in the construction of the "permalink" that is included on
+            each pager. You should choose a unique namespace for each independent pager
+            object. (The default `pager` instance uses the namespace "pager".)
+            */
+            var listpager = new Pager("listpager");
+            /* Note that now the following two calls seen above call methods on `listpager`
+            rather than `pager`. */
+            listpager.link("#list_harmonics",
+                {
+                    /* Just pass the Pager.DataList object as the range of options, and
+                       the pager will do the rest to automatically. */
+                    "Mode|mode": modeopt,
+                },
+                function(params) {
+                    /* Again, we have to do some minor reparsing of the tuple style into
+                    the format used for naming the files. */
+                    var lm = index2lm(params.mode.idx);
+                    var mode = "ell" + lm.l + "_m" + lm.m;
+                    return "harmonics/ylms_cividis_" + mode + ".png";
+                });
+            listpager.setparams({
+                    "mode": "(1,0)",
+                });
+        </script>
+    </figure>
+</section>
+</section>
+
+<hr>
+
+</body>
