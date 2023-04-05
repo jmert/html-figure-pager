@@ -17,3 +17,21 @@ By clicking on an option, the figure to the right is updated according to a user
 mapping from option values to image file name.
 
 ![screenshot](screenshot.png)
+
+## Cloning
+
+The demo linked above is contained within the `gh-pages` branch of this repository, and
+it contains a large number of images.
+With a normal `git clone`, all of these images are downloaded as part of the git history,
+increasing the download and storage size significantly beyond the small size of the pager
+script itself.
+
+To avoid downloading the unnecessary demo, you may instead use a shallow clone to obtain
+a copy of only the latest commit, and then "unshallow" the branch to obtain the full
+history of the `master` branch while completely ignoring the `gh-pages` branch.
+
+```bash
+git clone --depth 1 https://github.com/jmert/html-figure-pager
+cd html-figure-pager
+git pull --unshallow
+```
